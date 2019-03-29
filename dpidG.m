@@ -1,5 +1,5 @@
 function J = dpidG(G, f)
-% dpi/dG = dpidG(G(g(t0), S(x))
+% dpi/dG = dpidG(G(g(t0), f)
 %   Calculate Jacobian of function pi w.r.t. G
 %   S is a function of (x, f, o), o is not used in Jacobian
 %   function pi is 2x1, G is 3x1, f is 2x1, o is 2x1
