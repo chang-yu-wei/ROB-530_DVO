@@ -15,6 +15,9 @@
 #include <tf/transform_datatypes.h>
 #include <tf/transform_broadcaster.h>
 #include <Eigen/Geometry>
+#include <Eigen/Dense>
+#include <nav_msgs/Path.h>
+#include <iostream>
 
 /**
  * @class DVO
@@ -28,10 +31,15 @@ class DVO {
         Eigen::Matrix3f K;
         ros::Publisher pub_pointcloud;
         tf::TransformBroadcaster br;
+        ros::Publisher pub_path;
+        nav_msgs::Path path; 
+        int path_idx;
 
+        
     public:
         DVO(ros::NodeHandle nh_input){
             nh = nh_input;
+            path_idx = 0;
         }
 
         void makePointCloud( const cv::Mat& img_rgb, const cv::Mat& img_depth, pcl::PointCloud< pcl::PointXYZRGB >::Ptr& cloud);

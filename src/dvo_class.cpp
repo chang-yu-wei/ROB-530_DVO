@@ -47,10 +47,10 @@ void DVO::callback(const sensor_msgs::ImageConstPtr& image_rgb, const sensor_msg
     K <<    info->K[0], 0.0, info->K[2],
             0.0, info->K[4], info->K[5],
             0.0, 0.0, 1.0;
-
+    //cv_bridge is a bridge between OpenCV image and ROS image message
     cv_bridge::CvImageConstPtr img_rgb_cv_ptr = cv_bridge::toCvShare( image_rgb, "bgr8" );
     cv_bridge::CvImageConstPtr img_depth_cv_ptr = cv_bridge::toCvShare( image_depth, "32FC1" );
-
+    
     Eigen::Matrix4f transform = Eigen::Matrix4f::Identity();
     cv::Mat img_curInt, img_cur, depth_cur;
     cv::cvtColor( img_rgb_cv_ptr->image.clone(), img_curInt, CV_BGR2GRAY);
@@ -86,6 +86,16 @@ void DVO::callback(const sensor_msgs::ImageConstPtr& image_rgb, const sensor_msg
     );
     tform.setBasis(rotation);
     br.sendTransform(tf::StampedTransform(tform, timestamp, "cam_origin", "camera"));
+    
+    //Publish path
+    path.header.frame_id = "/cam_origin";
+    path.poses.resize(path_idx+1);
+    path.poses[path_idx].pose.position.x = accumulated_transform(0,3);
+    path.poses[path_idx].pose.position.y = accumulated_transform(1,3);
+    path.poses[path_idx].pose.position.z = accumulated_transform(2,3);
+    pub_path = nh.advertise<nav_msgs::Path>("path", 1);
+    pub_path.publish(path);
+    path_idx+=1;
 
     return;
 }
