@@ -1,4 +1,3 @@
-#include "ros/ros.h"
 #include "image_alignment.h"
 #include "util.h"
 #include <Eigen/Core>
@@ -7,44 +6,45 @@
 #include <opencv2/core/core.hpp>
 #include <sophus/se3.hpp>
 
-
-cv::Mat DirectImageAlignment::downsampleImg(const cv::Mat &img){
+cv::Mat ImageAlignment::downsampleImg(const cv::Mat &img){
 
     int w = img.cols, h = img.rows;
-    int w_ds = w/2, h_ds = h/2;
-
+    int w_out = w/2, h_out = h/2;
     float* input_ptr = (float*)img.ptr();
-    cv::Mat img_ds = cv::Mat::zeros(h_ds, w_ds, img.type());
-    float* output_ptr = (float*)img_ds.data;
+    cv::Mat img_out = cv::Mat::zeros(h_out, w_out, img.type());
+    float* output_ptr = (float*)img_out.data;
 
-    for (int y = 0; y < h_ds; y++) {
-        for (int x = 0; x < w_ds; x++) {
-            output_ptr[y*w_ds + x] += ( input_ptr[2*y * w + 2*x] + input_ptr[2*y * w + 2*x + 1]
+    // new pixel = average of 4 pixels around it
+    for (int y = 0; y < h_out; y++) {
+        for (int x = 0; x < w_out; x++) {
+            output_ptr[y*w_out + x] += ( input_ptr[2*y * w + 2*x] + input_ptr[2*y * w + 2*x + 1]
                                      + input_ptr[(2*y+1) * w + 2*x] + input_ptr[(2*y+1) * w + 2*x + 1]) / 4.0f;
         }
     }
 
-    return img_ds;
+    return img_out;
 }
 
-cv::Mat DirectImageAlignment::downsampleDepth(const cv::Mat &depth) {
+cv::Mat ImageAlignment::downsampleDepth(const cv::Mat &depth) {
 
     int w = depth.cols, h = depth.rows;
-    int w_ds = w/2, h_ds = h/2;
+    int w_out = w/2, h_out = h/2;
     float* input_ptr = (float*)depth.ptr();
-    cv::Mat depth_ds = cv::Mat::zeros(h_ds, w_ds, depth.type());
-    float* output_ptr = (float*)depth_ds.data;
+    cv::Mat depth_out = cv::Mat::zeros(h_out, w_out, depth.type());
+    float* output_ptr = (float*)depth_out.data;
 
-    for (int y = 0; y < h_ds; y++) {
-        for (int x = 0; x < w_ds; x++) {
+    for (int y = 0; y < h_out; y++) {
+        for (int x = 0; x < w_out; x++) {
+            // 4 pixels that we're going to average
             int top_left = 2*y * w + 2*x;
             int top_right = top_left + 1;
             int btm_left = (2*y+1) * w + 2*x;
             int btm_right = (2*y+1) * w + 2*x+1;
+            // count how many pixels are used to average (not ignored)
             int count = 0;
             float total = 0.0f;
 
-            //To keep the border of 3D shape, a pixel without depth is ignored.
+            // Ignore pixel without depth
             if (input_ptr[top_left] != 0.0f) {
                 total += input_ptr[top_left];
                 count++;
@@ -66,15 +66,15 @@ cv::Mat DirectImageAlignment::downsampleDepth(const cv::Mat &depth) {
             }
 
             if (count > 0) {
-                output_ptr[y*w_ds + x] = total/(float)count;
+                output_ptr[y*w_out + x] = total/(float)count;
             }
         }
     }
 
-    return depth_ds;
+    return depth_out;
 }
 
-void DirectImageAlignment::makePyramid(){
+void ImageAlignment::createPyramid(){
     k_Pyramid[0] = this->K;
     img_prev_Pyramid[0] = this->img_prev;
     depth_prev_Pyramid[0] = this->depth_prev;
@@ -103,7 +103,7 @@ void DirectImageAlignment::makePyramid(){
     return;
 }
 
-void DirectImageAlignment::calcGradient(const cv::Mat &img, cv::Mat &gradient, int direction) {
+void ImageAlignment::calcGradient(const cv::Mat &img, cv::Mat &gradient, int direction) {
     static int dx[2] = {1, 0};
     static int dy[2] = {0, 1};
     int w = img.cols;
@@ -136,7 +136,7 @@ void DirectImageAlignment::calcGradient(const cv::Mat &img, cv::Mat &gradient, i
     return;
 }
 
-Eigen::VectorXf DirectImageAlignment::calcRes(const Eigen::VectorXf &xi, const int level) {
+Eigen::VectorXf ImageAlignment::calcRes(const Eigen::VectorXf &xi, const int level) {
 
     Eigen::VectorXf residuals;
 
@@ -201,7 +201,7 @@ Eigen::VectorXf DirectImageAlignment::calcRes(const Eigen::VectorXf &xi, const i
     return residuals;
 }
 
-Eigen::MatrixXf DirectImageAlignment::calcJacobian(const Eigen::VectorXf &xi, const int level){
+Eigen::MatrixXf ImageAlignment::calcJacobian(const Eigen::VectorXf &xi, const int level){
 
 
     Eigen::MatrixXf klevel= k_Pyramid[level];
@@ -263,9 +263,12 @@ Eigen::MatrixXf DirectImageAlignment::calcJacobian(const Eigen::VectorXf &xi, co
                 float v = point2d_warped[1] / point2d_warped[2];
                 J1(0,0) = interpolate(ptr_gradx, u, v, w, h);
                 J1(0,1) = interpolate(ptr_grady, u ,v, w, h);
+                J.row(y*w+x) = - J1*Jw;
+            }else{
+                J.row(y*w+x).setZero();
             }
 
-            J.row(y*w+x) = - J1*Jw;
+            
 
             if(!std::isfinite(J.row(y*w+x)[0]))
                 J.row(y*w+x).setZero();
@@ -276,7 +279,7 @@ Eigen::MatrixXf DirectImageAlignment::calcJacobian(const Eigen::VectorXf &xi, co
     return J;
 }
 
-void  DirectImageAlignment::weighting(Eigen::VectorXf &residuals, Eigen::VectorXf &weights) {
+void  ImageAlignment::computeWeighting(Eigen::VectorXf &residuals, Eigen::VectorXf &weights) {
     int n = residuals.size();
     float lambda_init = 1.0f / (INITIAL_SIGMA * INITIAL_SIGMA);
     float lambda = lambda_init;
@@ -307,7 +310,7 @@ void  DirectImageAlignment::weighting(Eigen::VectorXf &residuals, Eigen::VectorX
     }
 }
 
-void DirectImageAlignment::doGaussNewton(Eigen::Matrix3f& rot, Eigen::Vector3f& t){
+void ImageAlignment::GaussNewton(Eigen::Matrix3f& rot, Eigen::Vector3f& t){
 
     Eigen::VectorXf xi, xi_prev;
     RtToSE3(rot,t,xi);
@@ -323,7 +326,7 @@ void DirectImageAlignment::doGaussNewton(Eigen::Matrix3f& rot, Eigen::Vector3f& 
             Eigen::VectorXf residuals = calcRes(xi, level);
             Eigen::VectorXf weights;
 
-            weighting(residuals, weights);
+            computeWeighting(residuals, weights);
             residuals = residuals.cwiseProduct(weights);
 
             Eigen::MatrixXf J = calcJacobian(xi, level);
@@ -341,7 +344,7 @@ void DirectImageAlignment::doGaussNewton(Eigen::Matrix3f& rot, Eigen::Vector3f& 
             inc = -(H.ldlt().solve(b));
 
             xi_prev = xi;
-            xi = Sophus::SE3f::log( Sophus::SE3f::exp(xi) * Sophus::SE3f::exp(inc) );
+            xi = Sophus::SE3f::log( Sophus::SE3f::exp(inc)*Sophus::SE3f::exp(xi)  );
 
             //Break when convergence.
             if (error / error_prev > 0.995)
@@ -356,7 +359,7 @@ void DirectImageAlignment::doGaussNewton(Eigen::Matrix3f& rot, Eigen::Vector3f& 
     return;
 }
 
-void DirectImageAlignment::doAlignment( Eigen::Matrix4f& transform, const cv::Mat& img_prev, const cv::Mat& depth_prev,
+void ImageAlignment::alignment( Eigen::Matrix4f& transform, const cv::Mat& img_prev, const cv::Mat& depth_prev,
                   const cv::Mat& img_cur, const cv::Mat& depth_cur, const Eigen::Matrix3f& K) {
 
     this->K = K;
@@ -365,17 +368,16 @@ void DirectImageAlignment::doAlignment( Eigen::Matrix4f& transform, const cv::Ma
     this->depth_prev = depth_prev;
     this->depth_cur = depth_cur;
 
-    makePyramid();
+    createPyramid();
 
     Eigen::Matrix3f rot = transform.block<3,3>(0,0);
     Eigen::Vector3f t = transform.block<3,1>(0,3);
 
-    doGaussNewton(rot, t);
+    GaussNewton(rot, t);
 
     transform.block<3,3>(0,0) = rot;
     transform.block<3,1>(0,3) = t;
+    
 
     return;
 }
-
-

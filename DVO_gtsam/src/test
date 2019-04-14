@@ -1,0 +1,31 @@
+vector<int> KF_list;
+   vector<vector<int>> Loop_list;
+
+   for(int i=3; i<=30; i+=3)
+   {
+      KF_list.push_back(i);
+   }
+   vector<int> temp;
+   temp.push_back(0);
+   temp.push_back(3);
+   Loop_list.push_back(temp);
+   temp.clear();
+   temp.push_back(3);
+   temp.push_back(30);
+   Loop_list.push_back(temp);
+   test.build_graph(KF_list, Loop_list);
+
+
+
+   Eigen::Matrix4f H = test.incr_Align_KF(3,30);
+
+    Eigen::Quaternionf qT(H.block<3,3>(0,0));
+    cout<<qT.w()<<" "<<qT.x()<<" "<<qT.y()<<" "<<qT.z()<<endl;
+    cout<<H.block<3,1>(0,3)<<endl;
+    usleep(100);
+   
+   H = test.Align_two_Frame(3,30);
+    Eigen::Quaternionf qT2(H.block<3,3>(0,0));
+    cout<<qT2.w()<<" "<<qT2.x()<<" "<<qT2.y()<<" "<<qT2.z()<<endl;
+    cout<<H.block<3,1>(0,3)<<endl;
+   

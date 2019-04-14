@@ -22,4 +22,7 @@ void SE3ToRt(const Eigen::VectorXf &xi, Eigen::Matrix3f &rot, Eigen::Vector3f &t
  */
 void RtToSE3(const Eigen::Matrix3f &rot, const Eigen::Vector3f &t, Eigen::VectorXf &xi);
 
+
+
+
 #endif //SIMPLE_DVO_UTIL_H

@@ -1,32 +1,32 @@
-#ifndef SIMPLE_DVO_IMAGE_ALIGNMENT_H
-#define SIMPLE_DVO_IMAGE_ALIGNMENT_H
+#ifndef IMAGE_ALIGNMENT_H
+#define IMAGE_ALIGNMENT_H
 
 #include <Eigen/Core>
 #include <Eigen/Dense>
 #include <Eigen/Cholesky>
 
 #include <opencv2/core/core.hpp>
-#include "ros/ros.h"
-
+#include "iostream"
 
 /**
- * @class DirectImageAlignment
- * @brief Class for direct image alignment between 2 images.
+ * @class ImageAlignment
+ * @brief Class for image alignment between 2 frames
  */
-class DirectImageAlignment {
+class ImageAlignment{
 private:
-    //Parameters
-    static const int num_pyramid = 5;
+
+    //Parameters for downsampling
+    static const int num_pyramid = 2;
     static const int num_GNiterations = 20;
 
-    //Image and camera matrix.
+    //Image and camera matrix K
     cv::Mat img_cur;
     cv::Mat img_prev;
     cv::Mat depth_cur;
     cv::Mat depth_prev;
     Eigen::Matrix3f K;
 
-    //Image and camera matrix pyramids.
+    //Image and camera matrix pyramids
     cv::Mat img_prev_Pyramid[num_pyramid];
     cv::Mat depth_prev_Pyramid[num_pyramid];
     cv::Mat img_cur_Pyramid[num_pyramid];
@@ -40,55 +40,54 @@ private:
 public:
 
     /**
-     * @brief Gray Image downsampling to make pyramid.
+     * @brief Downsample grey image to (w/2,h/2) for pyramid
      */
-    cv::Mat downsampleImg(const cv::Mat &gray);
+    cv::Mat downsampleImg(const cv::Mat &grey);
 
     /**
-     * @brief Depth Image downsampling to make pyramid.
+     * @brief Downsample depth image to (w/2,h/2) for pyramid
      */
     cv::Mat downsampleDepth(const cv::Mat &depth);
 
     /**
-     * @brief Make pyramids of gray/depth image and camera matrix.
+     * @brief build pyramids of grey/depth and camera matrix
      */
-    void makePyramid();
+    void createPyramid();
 
     /**
-     * @brief Calculate image intensity gradients.
-     * @param[in] direction: xdirection(0) or ydirection(1).
+     * @brief Calculate image intensity gradients
+     * @param[in] direction: 0 for x, 1 for y
      */
     void calcGradient(const cv::Mat &img, cv::Mat &gradient, int direction);
 
     /**
-     * @brief Calculate residual (photometric error between previous image and current image)
+     * @brief Calculate photometric error between previous image and current image
      */
     Eigen::VectorXf calcRes(const Eigen::VectorXf &xi, const int level);
 
     /**
-     * @brief Calculate Jacobian for minimizing least square error.
+     * @brief Calculate Jacobian for least square 
      */
     Eigen::MatrixXf calcJacobian(const Eigen::VectorXf &xi, const int level);
 
     /**
-     * @brief Compute robust weights from residuals.
+     * @brief Compute robust weights from residuals
      */
-    void weighting(Eigen::VectorXf &residuals, Eigen::VectorXf &weights);
+    void computeWeighting(Eigen::VectorXf &residuals, Eigen::VectorXf &weights);
 
     /**
      * @brief Execute GaussNewton optimzation and find the optimam rotation and translation.
      * @param[out] rot, t: camera pose transformation between 2 images.
      */
-    void doGaussNewton(Eigen::Matrix3f& rot, Eigen::Vector3f& t);
+    void GaussNewton(Eigen::Matrix3f& rot, Eigen::Vector3f& t);
 
     /**
      * @brief Execute direct image alignment between last and current image.
      * @param[out] transform: camera pose transformation between 2 images.
      */
-    void doAlignment( Eigen::Matrix4f& transform, const cv::Mat& img_prev, const cv::Mat& depth_prev,
+    void alignment( Eigen::Matrix4f& transform, const cv::Mat& img_prev, const cv::Mat& depth_prev,
                       const cv::Mat& img_cur, const cv::Mat& depth_cur, const Eigen::Matrix3f& K);
 };
 
 
-
-#endif //SIMPLE_DVO_IMAGE_ALIGNMENT_H
+#endif //IMAGE_ALIGNMENT_H
