@@ -3,9 +3,10 @@
 using namespace std;
 
 int main(int argc, char** argv){
-   string data_path = "/home/zixu/Extra_Disk/Dataset/SLAM/tum_rgbd/rgbd_dataset_freiburg1_desk2";
-   string assoc_file = "../associations/fr1_desk2.txt";
-   DVO test(assoc_file, data_path, TUM1);
+   string data_path = "/home/justin/class/ROB530/SLAM_project/data/rgbd_dataset_freiburg1_room";
+   string assoc_file = "/home/justin/class/ROB530/SLAM_project/data/associations/fr1_room.txt";
+   string kf_file = "/home/justin/class/ROB530/SLAM_project/data/keyframes/KeyFrameTrajectoryTUM_fr1_desk.txt";
+   DVO test(assoc_file, data_path, kf_file, TUM2);
    test.odom_only(0,-1);
    // vector<int> KF_list;
    // vector<vector<int>> Loop_list;
