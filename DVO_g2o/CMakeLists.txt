@@ -23,8 +23,6 @@ else()
    message(FATAL_ERROR "The compiler ${CMAKE_CXX_COMPILER} has no C++11 support. Please use a different C++ compiler.")
 endif()
 
-# for unittest scripts
-set(CMAKE_MODULE_PATH "${CMAKE_MODULE_PATH}" "${GTSAM_DIR}/../GTSAMCMakeTools")
 
 ## System dependencies are found with CMake's conventions
 find_package(OpenCV REQUIRED)
@@ -70,7 +68,6 @@ target_link_libraries(helper
    ${OpenCV_LIBRARIES}
    ${Boost_GENERAL}
    ${Boost_LIBRARIES}
-   gtsam
    )
 
 add_executable(test_node src/main.cpp)

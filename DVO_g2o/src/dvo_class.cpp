@@ -6,7 +6,11 @@ DVO::DVO(string strAssociationFilename, string strDataPath, TUM type)
     this->DataPath = strDataPath;
     load_intrinsic(type);
     LoadImages(strAssociationFilename);
-
+    setupLog();
+}
+DVO::~DVO()
+{
+    logfile.close();
 }
 
 void DVO::load_intrinsic(TUM type)
@@ -149,9 +153,7 @@ Eigen::Matrix4f DVO::Align_two_Frame(int Frame1, int Frame2, Eigen::Matrix4f T_i
          optimizer.add_Edge(KF_list[i-1], KF_list[i], T.cast<double>(), 1);
      }
 
-    Eigen::Quaternionf qT(accumulated_transform.block<3,3>(0,0));
-    cout<<qT.w()<<" "<<qT.x()<<" "<<qT.y()<<" "<<qT.z()<<endl;
-    cout<<accumulated_transform.block<3,1>(0,3)<<endl;
+    
     
      // insert loop constraint
      for(int i=1; i<Loop_Closure.size(); i++)
@@ -166,3 +168,43 @@ Eigen::Matrix4f DVO::Align_two_Frame(int Frame1, int Frame2, Eigen::Matrix4f T_i
     optimizer.optimize_graph(100);
      
  }
+
+ void DVO::odom_only(int start_idx, int end_idx)
+ {
+    if( end_idx ==-1)
+        end_idx = nImages;
+    Eigen::Matrix4f accumulated_transform = Eigen::Matrix4f::Identity();
+    for(int idx = start_idx; idx<min(end_idx,nImages); idx++)
+    {
+        Eigen::Matrix4f T = incr_Align_KF(start_idx, start_idx+1);
+        accumulated_transform = accumulated_transform*T;
+        LogInfo(idx, accumulated_transform);
+    }
+ }
+
+ void DVO::setupLog()
+{
+    //get current time
+    char buff[20];
+    struct tm *sTm;
+    time_t now = time (0);
+    sTm = localtime (&now);
+    strftime (buff, sizeof(buff), "%Y_%m_%d_%H_%M_%S", sTm);
+    
+    boost::filesystem::path canonicalPath = boost::filesystem::canonical(".", boost::filesystem::current_path());
+    //create log root
+    string root_dir = canonicalPath.string();
+    
+    string logname;
+    logname = root_dir+string("/log_")+string(buff)+".txt";
+    //sprintf(logname, "%slog_%s.txt", root_dir, buff);
+    logfile.open(logname);
+}
+
+void DVO::LogInfo(int frame_idx, Eigen::Matrix4f T)
+{
+    Eigen::Quaternionf qT(T.block<3,3>(0,0));
+    logfile<<frame_idx<<" "<<vstrImageFilenamesRGB[frame_idx]<<" ";
+    logfile<<qT.w()<<" "<<qT.x()<<" "<<qT.y()<<" "<<qT.z()<<" ";
+    logfile<<T(0,3)<<" "<<T(1,3)<<" "<<T(2,3)<<"\n";  
+}

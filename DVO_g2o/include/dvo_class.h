@@ -13,6 +13,8 @@
 #include <vector>
 #include<iostream>
 #include<fstream>
+#include <time.h>
+#include <boost/filesystem.hpp>
 
 
 using namespace std;
@@ -48,17 +50,24 @@ class DVO {
         vector<int> KF_list;
         vector<vector<int>> Loop_list;
 
+        ofstream logfile;
+
 
     private:
         void load_intrinsic(TUM type);
         void LoadImages(const string &strAssociationFilename);
+        void setupLog();
+        void LogInfo(int frame_idx, Eigen::Matrix4f T);
 
     public:
         DVO(string strAssociationFilename, string strDataPath, TUM type);
+        ~DVO();
         Eigen::Matrix4f incr_Align_KF(int prev_KF_idx, int cur_KF_idx);
         Eigen::Matrix4f Align_two_Frame(int Frame1, int Frame2, Eigen::Matrix4f T_init);
 
         void build_graph(vector<int> KF_list, vector<vector<int>> Loop_Closure);
+        void odom_only(int start_idx, int end_idx);
+        
     
 };
 #endif //SIMPLE_DVO_DVO_CLASS_H
