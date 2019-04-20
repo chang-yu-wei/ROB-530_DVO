@@ -1,11 +1,13 @@
 #include "dvo_class.h"
 
-DVO::DVO(string strAssociationFilename, string strDataPath, TUM type)
+DVO::DVO(string strAssociationFilename, string strDataPath,string strKfFilename, TUM type)
 {
     this->AssociationFilename = strAssociationFilename;
     this->DataPath = strDataPath;
+    this->KfFilename = strKfFilename;
     load_intrinsic(type);
     LoadImages(strAssociationFilename);
+    LoadKF(KfFilename);
     setupLog();
 }
 DVO::~DVO()
@@ -74,6 +76,27 @@ void DVO::LoadImages(const string &strAssociationFilename)
     }
     nImages = vstrImageFilenamesRGB.size();
     cout<<"Successfully reading association file, there are "<<nImages<<" in data set."<<endl;;
+}
+
+void DVO::LoadKF(const string &strKfFilename)
+{
+    ifstream fAssociation;
+    fAssociation.open(strKfFilename.c_str());
+    while(!fAssociation.eof())
+    {
+        string s;
+        getline(fAssociation,s);
+        if(!s.empty())
+        {
+            stringstream ss;
+            ss << s;
+            int id;
+            ss >> id;
+            KF_list.push_back(id);
+        }
+    }
+    nKFs = KF_list.size();
+    cout<<"Successfully reading keyframe file, there are "<<nKFs<<" keyframes in data set."<<endl;;
 }
 
 Eigen::Matrix4f DVO::incr_Align_KF(int prev_KF_idx, int cur_KF_idx)

@@ -40,6 +40,7 @@ class DVO {
         // variable for file input
         string AssociationFilename;
         string DataPath;
+        string KfFilename;
         vector<string> vstrImageFilenamesRGB;
         vector<string> vstrImageFilenamesD;
         vector<double> vTimestamps;
@@ -49,6 +50,7 @@ class DVO {
         // pose constraint 
         vector<int> KF_list;
         vector<vector<int>> Loop_list;
+        int nKFs;
 
         ofstream logfile;
 
@@ -58,9 +60,10 @@ class DVO {
         void LoadImages(const string &strAssociationFilename);
         void setupLog();
         void LogInfo(int frame_idx, Eigen::Matrix4f T);
+        void LoadKF(const string &strKfFilename);
 
     public:
-        DVO(string strAssociationFilename, string strDataPath, TUM type);
+        DVO(string strAssociationFilename, string strDataPath, string strKfFilename, TUM type);
         ~DVO();
         Eigen::Matrix4f incr_Align_KF(int prev_KF_idx, int cur_KF_idx);
         Eigen::Matrix4f Align_two_Frame(int Frame1, int Frame2, Eigen::Matrix4f T_init);
