@@ -172,14 +172,16 @@ Eigen::Matrix4f DVO::Align_two_Frame(int Frame1, int Frame2, Eigen::Matrix4f T_i
  void DVO::odom_only(int start_idx, int end_idx)
  {
     if( end_idx ==-1)
-        end_idx = nImages;
+        end_idx = nImages-1;
     Eigen::Matrix4f accumulated_transform = Eigen::Matrix4f::Identity();
     LogInfo(start_idx, accumulated_transform);
-    for(int idx = start_idx; idx<min(end_idx,nImages); idx++)
+    for(int idx = start_idx; idx<min(end_idx,nImages-1); idx++)
     {
         Eigen::Matrix4f T = Align_two_Frame(idx, idx+1);
         accumulated_transform = accumulated_transform*T;
-        std::cout<<T(0,3)<<" "<<T(1,3)<<" "<<T(2,3)<<std::endl;
+        
+        std::cout<<idx+1<<std::endl;
+        std::cout<<T<<std::endl;
         LogInfo(idx+1, accumulated_transform);
     }
  }
@@ -210,4 +212,5 @@ void DVO::LogInfo(int frame_idx, Eigen::Matrix4f T)
     logfile<<frame_idx<<" "<<vstrImageFilenamesRGB[frame_idx]<<" ";
     logfile<<qT.w()<<" "<<qT.x()<<" "<<qT.y()<<" "<<qT.z()<<" ";
     logfile<<T(0,3)<<" "<<T(1,3)<<" "<<T(2,3)<<"\n";  
+    logfile.flush();
 }

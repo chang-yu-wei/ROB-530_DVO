@@ -230,7 +230,7 @@ void DirectImageAlignment::doGaussNewton(Eigen::Matrix3f& rot, Eigen::Vector3f& 
             inc = -(H.ldlt().solve(b));
 
             xi_prev = xi;
-            xi = Sophus::SE3f::log( Sophus::SE3f::exp(xi) * Sophus::SE3f::exp(inc) );
+            xi = Sophus::SE3f::log(Sophus::SE3f::exp(inc)*Sophus::SE3f::exp(xi) );
 
             //Break when convergence.
             if (error / error_prev > 0.995)

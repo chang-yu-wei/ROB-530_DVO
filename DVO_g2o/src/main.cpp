@@ -5,7 +5,7 @@ using namespace std;
 int main(int argc, char** argv){
    string data_path = "/home/zixu/Extra_Disk/Dataset/SLAM/tum_rgbd/rgbd_dataset_freiburg1_desk2";
    string assoc_file = "../associations/fr1_desk2.txt";
-   DVO test(assoc_file, data_path, TUM2);
+   DVO test(assoc_file, data_path, TUM1);
    test.odom_only(0,-1);
    // vector<int> KF_list;
    // vector<vector<int>> Loop_list;
