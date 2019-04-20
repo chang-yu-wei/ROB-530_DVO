@@ -8,7 +8,7 @@
     <!-- <param name="use_sim_time" value="true" /> -->
 
     <!-- Parameters -->
-    <arg name="data"        default="rgbd_dataset_freiburg2_desk.bag"/>
+    <arg name="data"        default="rgbd_dataset_freiburg1_room.bag"/>
     <arg name="img" 		default="/camera/rgb/image_color"/>
 	<arg name="depth" 		default="/camera/depth/image"/>
 	<arg name="info" 		default="/camera/rgb/camera_info"/>

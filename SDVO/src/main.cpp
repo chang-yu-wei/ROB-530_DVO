@@ -11,6 +11,8 @@
 
 typedef message_filters::sync_policies::ApproximateTime<sensor_msgs::Image, sensor_msgs::Image, sensor_msgs::CameraInfo> SP;
 
+using namespace std;
+
 int main(int argc, char** argv){
     if(argc != 4){
         std::cout<<"argc: "<<argc<<std::endl;
@@ -20,10 +22,13 @@ int main(int argc, char** argv){
         std::cout<<"Usage: rosrun dvo run_dvo --image_color --image_depth --camera_info"<<std::endl;
         // return EXIT_FAILURE;
     }
+    // data path
+    string data_path = "/home/justin/class/ROB530/SLAM_project/data/rgbd_dataset_freiburg1_room";
+    string assoc_file = "/home/justin/class/ROB530/SLAM_project/data/associations/fr1_room.txt";
 
     ros::init(argc, argv, "dvo");
     ros::NodeHandle nh;
-    DVO dvo(nh);
+    DVO dvo(nh, assoc_file, data_path);
 
     std::cout<<"finshed initialzation!"<<std::endl;
 

@@ -18,6 +18,12 @@
 #include <Eigen/Dense>
 #include <nav_msgs/Path.h>
 #include <iostream>
+#include <fstream>
+#include <time.h>
+#include <boost/filesystem.hpp>
+#include <string.h>
+
+using namespace std;
 
 /**
  * @class DVO
@@ -34,16 +40,28 @@ class DVO {
         ros::Publisher pub_path;
         nav_msgs::Path path; 
         int path_idx;
+        
+        // variables for file input
+        string AssociationFilename;
+        string DataPath;
+        vector<string> vstrImageFilenamesRGB;
+        vector<string> vstrImageFilenamesD;
+        vector<double> vTimestamps;
+        int img_idx;
+        int nImages;
+
+        ofstream logfile;
+
+        void LoadImages(const string &strAssociationFilename);
+        void setupLog();
+        void LogInfo(int frame_idx, Eigen::Matrix4f T);
 
         
     public:
-        DVO(ros::NodeHandle nh_input){
-            nh = nh_input;
-            path_idx = 0;
-        }
+        DVO(ros::NodeHandle nh_input, string strAssociationFilename, string strDataPath);
+        ~DVO();
 
         void makePointCloud( const cv::Mat& img_rgb, const cv::Mat& img_depth, pcl::PointCloud< pcl::PointXYZRGB >::Ptr& cloud);
-
         void callback(const sensor_msgs::ImageConstPtr& image_rgb, const sensor_msgs::ImageConstPtr& image_depth, const sensor_msgs::CameraInfoConstPtr& info);
 };
 
