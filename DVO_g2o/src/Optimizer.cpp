@@ -47,7 +47,7 @@ void Optimizer::add_Edge(int id_1, int id_2, Eigen::Matrix4d T21, double invSigm
 void Optimizer::optimize_graph(int nIterations)
 {
     optimizer.initializeOptimization();
-    optimizer.setVerbose(true);
+    optimizer.setVerbose(false);
     optimizer.optimize(nIterations);
     
 

@@ -234,9 +234,10 @@ float DVO::Align_two_Frame(int Frame1, int Frame2, Eigen::Matrix4f& T_init)
 void DVO::local_BA_only()
 {
     // kf idx start from 2 
-    for(int i = 2; i<=50; i++)
+    for(int i = 2; i<=25; i++)
     //for(int i = 2; i<=(nKFs+1); i++)
     {
+        std::cout<<"Key Frame "<<i<<std::endl;
         vector<vector<int>> covisible = LoadKF(i);
         if(i==2)
         { //initialize the system
@@ -271,6 +272,8 @@ void DVO::BundleAdjust(vector<vector<int>> graph)
     int host_KF_id = host_frame[0];
     int host_frame_id = host_frame[1];
     int num_active_vertex = graph.size();
+    num_active_vertex = min(num_active_vertex, 10);
+   
     map<int, int> vertex_existed;
     // first add host_vertex
     optimizer.add_Vertex(KF_pose[host_KF_id].cast<double>(), host_KF_id , false);
@@ -281,9 +284,25 @@ void DVO::BundleAdjust(vector<vector<int>> graph)
         vector<int> cur_frame = graph[i];
         int cur_KF_id = cur_frame[0];
         int cur_frame_id = cur_frame[1];
-        Eigen::Matrix4f T = (KF_pose[cur_KF_id].inverse()*KF_pose[host_KF_id]);
-        float error = Align_two_Frame(host_frame_id, cur_frame_id, T);
-        if(error<30){
+        Eigen::Matrix4f T_init = (KF_pose[cur_KF_id].inverse()*KF_pose[host_KF_id]);
+        Eigen::Matrix4f T_try1 = T_init;
+        float error_try1 = Align_two_Frame(host_frame_id, cur_frame_id, T_try1);
+        Eigen::Matrix4f T_try2 = Eigen::Matrix4f::Identity();
+        float error_try2 = Align_two_Frame(host_frame_id, cur_frame_id, T_try2);
+        Eigen::Matrix4f T;
+        float error;
+        if((error_try2<error_try1 && error_try2>1.5) || !isfinite(error_try1))
+        {
+            T = T_try2;
+            error = error_try2;
+            cout<<"Align "<<host_KF_id<<" to "<<cur_KF_id<<" identity is better with error "<< error<<std::endl;
+        }
+        else{
+            T = T_try1;
+            error = error_try1;
+            cout<<"Align "<<host_KF_id<<" to "<<cur_KF_id<<" with error "<< error<<std::endl;
+        }
+        if(error<30 && error>1.5 && isfinite(error)){
             vertex_existed[cur_KF_id] = 1;
             optimizer.add_Vertex(KF_pose[cur_KF_id].cast<double>(), cur_KF_id , cur_KF_id==0);
             optimizer.add_Edge(cur_KF_id, host_KF_id, T.cast<double>(), 16/(error*error));

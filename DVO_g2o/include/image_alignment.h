@@ -17,7 +17,7 @@ private:
 
     //Parameters for downsampling
     static const int num_pyramid = 5;
-    static const int num_GNiterations = 20;
+    static const int num_GNiterations = 500;
 
     //Image and camera matrix K
     cv::Mat img_cur;

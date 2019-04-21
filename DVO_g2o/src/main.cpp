@@ -8,10 +8,12 @@ int main(int argc, char** argv){
    string assoc_file = "../associations/fr2_desk.txt";
    DVO test(assoc_file, data_path, kf_path, TUM2);
    /*
-   Eigen::Matrix4f T = test.Align_two_Frame(0, 55, Eigen::Matrix4f::Identity());
-    Eigen::Quaternionf qT(T.block<3,3>(0,0));
-    std::cout<<qT.w()<<" "<<qT.x()<<" "<<qT.y()<<" "<<qT.z()<<" ";
-    std::cout<<T(0,3)<<" "<<T(1,3)<<" "<<T(2,3)<<"\n";  
+   Eigen::Matrix4f T = Eigen::Matrix4f::Identity();
+   float error = test.Align_two_Frame(8,2599, T);
+   cout<<error<<endl;
+   Eigen::Quaternionf qT(T.block<3,3>(0,0));
+   std::cout<<qT.w()<<" "<<qT.x()<<" "<<qT.y()<<" "<<qT.z()<<" ";
+   std::cout<<T(0,3)<<" "<<T(1,3)<<" "<<T(2,3)<<"\n";  
    */
    test.local_BA_only();
 

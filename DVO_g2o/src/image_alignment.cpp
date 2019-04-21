@@ -331,9 +331,11 @@ void ImageAlignment::GaussNewton(Eigen::Matrix3f& rot, Eigen::Vector3f& t){
 
             Eigen::MatrixXf J = calcJacobian(xi, level);
             // compute weighted Jacobian
+            
             for (int i = 0; i < residuals.size(); ++i)
                 for (int j = 0; j < J.cols(); ++j)
                     J(i, j) = J(i, j) * weights[i];
+            
             Eigen::MatrixXf Jt = J.transpose();
 
             float error = residuals.transpose()*residuals;
@@ -345,8 +347,8 @@ void ImageAlignment::GaussNewton(Eigen::Matrix3f& rot, Eigen::Vector3f& t){
 
             xi_prev = xi;
             if(!((inc.array() == inc.array())).all()){
-                std::cout<<"NAN Detected"<<std::endl;
-                this->error = 1000000;
+                //std::cout<<"NAN Detected"<<std::endl;
+                this->error = error;
                 break;
             }
                 
