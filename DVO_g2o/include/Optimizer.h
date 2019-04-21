@@ -45,7 +45,6 @@ public:
     Eigen::Matrix4d get_Pose_global(int idx);
     double get_error();
     void clean_graph();
-    void odom_only(int start_idx, int end_idx);
    
 private:
     g2o::SparseOptimizer optimizer;

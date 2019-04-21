@@ -14,9 +14,9 @@ Optimizer::Optimizer()
 
 void Optimizer::add_Vertex(Eigen::Matrix4d T, int idx, bool fix)
 {
-
     g2o::VertexSE3Expmap * vSE3 = new g2o::VertexSE3Expmap();
-    vSE3->setEstimate(g2o::SE3Quat(T.block<3,3>(0,0),T.block<3,1>(0,3))); // from world to camera T_wc
+    Eigen::Matrix4d T_inv = T.inverse();
+    vSE3->setEstimate(g2o::SE3Quat(T_inv.block<3,3>(0,0),T_inv.block<3,1>(0,3))); // from world to camera T_wc
     vSE3->setId(idx);
     vSE3->setFixed(fix);
     optimizer.addVertex(vSE3);

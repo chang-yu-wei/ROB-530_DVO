@@ -16,7 +16,7 @@ class ImageAlignment{
 private:
 
     //Parameters for downsampling
-    static const int num_pyramid = 2;
+    static const int num_pyramid = 5;
     static const int num_GNiterations = 20;
 
     //Image and camera matrix K
@@ -37,6 +37,7 @@ private:
     static constexpr float INITIAL_SIGMA = 5.0f;
     static constexpr float DEFAULT_DOF = 5.0f;
 
+    float error;
 public:
 
     /**
@@ -87,6 +88,8 @@ public:
      */
     void alignment( Eigen::Matrix4f& transform, const cv::Mat& img_prev, const cv::Mat& depth_prev,
                       const cv::Mat& img_cur, const cv::Mat& depth_cur, const Eigen::Matrix3f& K);
+
+    float getError();
 };
 
 

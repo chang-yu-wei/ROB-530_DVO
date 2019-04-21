@@ -337,20 +337,29 @@ void ImageAlignment::GaussNewton(Eigen::Matrix3f& rot, Eigen::Vector3f& t){
             Eigen::MatrixXf Jt = J.transpose();
 
             float error = residuals.transpose()*residuals;
-
+            //std::cout<<error<<std::endl;
             // compute update step.
             Eigen::VectorXf b = Jt * residuals;
             H = Jt * J;
             inc = -(H.ldlt().solve(b));
 
             xi_prev = xi;
+            if(!((inc.array() == inc.array())).all()){
+                std::cout<<"NAN Detected"<<std::endl;
+                this->error = 1000000;
+                break;
+            }
+                
             xi = Sophus::SE3f::log( Sophus::SE3f::exp(inc)*Sophus::SE3f::exp(xi)  );
 
             //Break when convergence.
-            if (error / error_prev > 0.995)
+            if (error / error_prev > 0.995){
+                this->error = error;
                 break;
+            }
 
             error_prev = error;
+            this->error = error;
         }
     }
 
@@ -369,15 +378,21 @@ void ImageAlignment::alignment( Eigen::Matrix4f& transform, const cv::Mat& img_p
     this->depth_cur = depth_cur;
 
     createPyramid();
-
+   
     Eigen::Matrix3f rot = transform.block<3,3>(0,0);
     Eigen::Vector3f t = transform.block<3,1>(0,3);
-
+   
     GaussNewton(rot, t);
-
+    
     transform.block<3,3>(0,0) = rot;
     transform.block<3,1>(0,3) = t;
     
 
     return;
+}
+
+
+float ImageAlignment::getError()
+{
+    return this->error;
 }
