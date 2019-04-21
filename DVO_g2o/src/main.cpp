@@ -3,7 +3,7 @@
 using namespace std;
 
 int main(int argc, char** argv){
-   string kf_path = "/home/extra_disk/Git_Repo/ORB_SLAM_ROB530/fr2_desk";
+   string kf_path = "../fr2_desk";
    string data_path = "/home/zixu/Extra_Disk/Dataset/SLAM/tum_rgbd/rgbd_dataset_freiburg2_desk";
    string assoc_file = "../associations/fr2_desk.txt";
    DVO test(assoc_file, data_path, kf_path, TUM2);
