@@ -36,6 +36,7 @@ class DVO {
 
         //pose optimizer
         Optimizer Pose_Graph;
+        int init_idx = 6;
 
 
         // variable for file input

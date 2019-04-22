@@ -165,7 +165,7 @@ Eigen::VectorXf ImageAlignment::calcRes(const Eigen::VectorXf &xi, const int lev
     float* ptr_img_prev = (float*)img_prev_level.data;
     float* ptr_depth_prev = (float*)depth_prev_level.data;
     float* ptr_img_cur = (float*)img_cur_level.data;
-    float* ptr_depth_cur = (float*)depth_cur_level.data;
+    //float* ptr_depth_cur = (float*)depth_cur_level.data;
 
     residuals.resize(w*h);
     for (int y = 0; y < h; y++)

@@ -3,12 +3,13 @@
 using namespace std;
 
 int main(int argc, char** argv){
-   string kf_path = "../fr2_desk";
-   string data_path = "/home/zixu/Extra_Disk/Dataset/SLAM/tum_rgbd/rgbd_dataset_freiburg2_desk";
-   string assoc_file = "../associations/fr2_desk.txt";
-   DVO test(assoc_file, data_path, kf_path, TUM2);
-   test.local_BA_only();
-   //test.PoseGraph();
+   string kf_path = "../fr3_office_val";
+   string data_path = "/home/zixu/Extra_Disk/Dataset/SLAM/tum_rgbd/rgbd_dataset_freiburg3_long_office_household_validation";
+   string assoc_file = "../associations/fr3_office_val.txt";
+   DVO test(assoc_file, data_path, kf_path, TUM3);
+   //test.local_BA_only();
+   test.PoseGraph();
+   //test.odom_only(0,-1);
 /*
     Eigen::Matrix4f T = Eigen::Matrix4f::Identity();
    float error = test.Align_two_Frame(99,128, T);

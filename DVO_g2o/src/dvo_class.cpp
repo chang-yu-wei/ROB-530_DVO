@@ -234,7 +234,7 @@ float DVO::Align_two_Frame(int Frame1, int Frame2, Eigen::Matrix4f& T_init)
 void DVO::local_BA_only()
 {
     // kf idx start from 2 
-    //for(int i = 2; i<=160; i++)
+    //for(int i = 2; i<=10; i++)
     for(int i = 2; i<=(nKFs+1); i++)
     {
         std::cout<<"Key Frame "<<i<<std::endl;
@@ -268,20 +268,22 @@ void DVO::local_BA_only()
 void DVO::PoseGraph()
 {
     // kf idx start from 2 
-    for(int i = 2; i<=160; i++)
+    init_idx = 2;
+    for(int i =init_idx; i<=75; i++)
     //for(int i = 2; i<=(nKFs+1); i++)
     {
         std::cout<<"Key Frame "<<i<<std::endl;
         vector<vector<int>> covisible = LoadKF(i);
-        if(i==2)
+        if(i==init_idx)
         { //initialize the system
             for(auto & itr : covisible)
             {
                 KF_frame_id[itr[0]] = itr[1];
             }
-            Pose_Graph.add_Vertex(Eigen::Matrix4d::Identity(), 0 ,true);
-            Eigen::Matrix4f T_01 = incr_Align_KF(KF_frame_id[0], KF_frame_id[1]);
-            Pose_Graph.add_Vertex(T_01.cast<double>(), 1 ,false);
+            Pose_Graph.add_Vertex(Eigen::Matrix4d::Identity(), init_idx-2 ,true);
+            Eigen::Matrix4f T_01 = incr_Align_KF(KF_frame_id[init_idx-2], KF_frame_id[init_idx-1]);
+            Pose_Graph.add_Vertex(T_01.cast<double>(), init_idx-1 ,false);
+            Pose_Graph.add_Edge(init_idx-2, init_idx-1, T_01.inverse().cast<double>(), 30);
         }else{
             vector<int> host_frame = covisible[0];
             int host_KF_id = host_frame[0];
@@ -413,12 +415,12 @@ void DVO::PoseGraph_BA(vector<vector<int>> graph, Eigen::Matrix4d T_odom)
             {
                 T = T_try2;
                 error = error_try2;
-                //cout<<"Align "<<host_KF_id<<" to "<<cur_KF_id<<" identity is better with error "<< error<<std::endl;
+                cout<<"Align "<<host_KF_id<<" to "<<cur_KF_id<<" identity is better with error "<< error<<std::endl;
             }
             else{
                 T = T_try1;
                 error = error_try1;
-                //cout<<"Align "<<host_KF_id<<" to "<<cur_KF_id<<" with error "<< error<<std::endl;
+                cout<<"Align "<<host_KF_id<<" to "<<cur_KF_id<<" with error "<< error<<std::endl;
             }
             if(error<30 && error>1.5 && isfinite(error)){
                 Pose_Graph.add_Edge(cur_KF_id, host_KF_id, T.cast<double>(), 25/(error*error));
