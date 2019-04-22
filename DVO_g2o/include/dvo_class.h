@@ -35,7 +35,7 @@ class DVO {
         ImageAlignment backend;
 
         //pose optimizer
-        
+        Optimizer Pose_Graph;
 
 
         // variable for file input
@@ -57,6 +57,8 @@ class DVO {
         map<int, Eigen::Matrix4f,std::less<int>, Eigen::aligned_allocator<std::pair<const int, Eigen::Vector4f>>> KF_pose;
         map<int, int> KF_frame_id;
 
+        
+
 
     private:
         void load_intrinsic(TUM type);
@@ -65,6 +67,8 @@ class DVO {
         void LogInfo(int frame_idx, Eigen::Matrix4f T);
         vector<vector<int>> LoadKF(int idx);
         void BundleAdjust(vector<vector<int>> graph);
+        void PoseGraph_BA(vector<vector<int>> graph, Eigen::Matrix4d T);
+
 
     public:
         DVO(string strAssociationFilename, string strDataPath, TUM type);
@@ -76,6 +80,7 @@ class DVO {
         //void build_graph(vector<int> KF_list, vector<vector<int>> Loop_Closure);
         void odom_only(int start_idx, int end_idx);
         void local_BA_only();
+        void PoseGraph();
         
         
     

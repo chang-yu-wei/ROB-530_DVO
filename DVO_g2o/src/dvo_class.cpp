@@ -234,8 +234,8 @@ float DVO::Align_two_Frame(int Frame1, int Frame2, Eigen::Matrix4f& T_init)
 void DVO::local_BA_only()
 {
     // kf idx start from 2 
-    for(int i = 2; i<=25; i++)
-    //for(int i = 2; i<=(nKFs+1); i++)
+    //for(int i = 2; i<=160; i++)
+    for(int i = 2; i<=(nKFs+1); i++)
     {
         std::cout<<"Key Frame "<<i<<std::endl;
         vector<vector<int>> covisible = LoadKF(i);
@@ -265,6 +265,39 @@ void DVO::local_BA_only()
     }    
 }
 
+void DVO::PoseGraph()
+{
+    // kf idx start from 2 
+    for(int i = 2; i<=160; i++)
+    //for(int i = 2; i<=(nKFs+1); i++)
+    {
+        std::cout<<"Key Frame "<<i<<std::endl;
+        vector<vector<int>> covisible = LoadKF(i);
+        if(i==2)
+        { //initialize the system
+            for(auto & itr : covisible)
+            {
+                KF_frame_id[itr[0]] = itr[1];
+            }
+            Pose_Graph.add_Vertex(Eigen::Matrix4d::Identity(), 0 ,true);
+            Eigen::Matrix4f T_01 = incr_Align_KF(KF_frame_id[0], KF_frame_id[1]);
+            Pose_Graph.add_Vertex(T_01.cast<double>(), 1 ,false);
+        }else{
+            vector<int> host_frame = covisible[0];
+            int host_KF_id = host_frame[0];
+            int host_frame_id = host_frame[1];
+            KF_frame_id[host_KF_id] = host_frame_id;
+        }
+        Eigen::Matrix4d T=incr_Align_KF(KF_frame_id[i-1], KF_frame_id[i]).cast<double>();
+        //cout<<T<<endl;
+        PoseGraph_BA(covisible, T);
+    }
+    for(int i=0; i<KF_frame_id.size(); i++)
+    {
+        LogInfo(KF_frame_id[i], Pose_Graph.get_Pose_global(i).cast<float>());
+    }    
+}
+
 void DVO::BundleAdjust(vector<vector<int>> graph)
 {
     Optimizer optimizer;
@@ -278,8 +311,11 @@ void DVO::BundleAdjust(vector<vector<int>> graph)
     // first add host_vertex
     optimizer.add_Vertex(KF_pose[host_KF_id].cast<double>(), host_KF_id , false);
     vertex_existed[host_KF_id] = 1;
-
-    for(int i=1; i<num_active_vertex; i++)
+    optimizer.add_Vertex(KF_pose[host_KF_id-1].cast<double>(), host_KF_id-1, false);
+    //std::cout<<"Add Fixed vertex "<<cur_KF_id-1<<std::endl;
+    optimizer.add_Edge(host_KF_id-1, host_KF_id, (KF_pose[host_KF_id].inverse()*KF_pose[host_KF_id-1]).cast<double>(), 10);
+    vertex_existed[host_KF_id-1] = 1;
+    for(int i=2; i<num_active_vertex; i++)
     {
         vector<int> cur_frame = graph[i];
         int cur_KF_id = cur_frame[0];
@@ -314,7 +350,7 @@ void DVO::BundleAdjust(vector<vector<int>> graph)
         // add adjanct vertex
         vector<int> cur_frame = graph[i];
         int cur_KF_id = cur_frame[0];
-        int cur_frame_id = cur_frame[1];
+        //int cur_frame_id = cur_frame[1];
         if(vertex_existed.find(cur_KF_id)!=vertex_existed.end()){
             if((cur_KF_id>0) && vertex_existed.find(cur_KF_id-1)==vertex_existed.end())
             {
@@ -344,6 +380,52 @@ void DVO::BundleAdjust(vector<vector<int>> graph)
         if(vertex_existed.find(cur_KF_id)!=vertex_existed.end())
             KF_pose[cur_KF_id] = optimizer.get_Pose_global(cur_KF_id).cast<float>();    
     }
+}
+
+void DVO::PoseGraph_BA(vector<vector<int>> graph, Eigen::Matrix4d T_odom)
+{
+    vector<int> host_frame = graph[0];
+    int host_KF_id = host_frame[0];
+    int host_frame_id = host_frame[1];
+    int num_active_vertex = graph.size();
+    num_active_vertex = min(num_active_vertex, 10);
+   
+    // first add host_vertex
+    Eigen::Matrix4d Odom_pose = Pose_Graph.get_Pose_global(host_KF_id-1)*T_odom;
+    Pose_Graph.add_Vertex(Odom_pose, host_KF_id , false);
+    
+    for(int i=1; i<num_active_vertex; i++)
+    {
+        vector<int> cur_frame = graph[i];
+        int cur_KF_id = cur_frame[0];
+        int cur_frame_id = cur_frame[1];
+        if(cur_KF_id == (host_KF_id-1))
+        {
+            Pose_Graph.add_Edge(cur_KF_id, host_KF_id, T_odom.inverse(), 30);
+        }else{
+            Eigen::Matrix4f T_try1 = (Pose_Graph.get_Pose_global(cur_KF_id).inverse()*Pose_Graph.get_Pose_global(host_KF_id)).cast<float>();
+            float error_try1 = Align_two_Frame(host_frame_id, cur_frame_id, T_try1);
+            Eigen::Matrix4f T_try2 = Eigen::Matrix4f::Identity();
+            float error_try2 = Align_two_Frame(host_frame_id, cur_frame_id, T_try2);
+            Eigen::Matrix4f T;
+            float error;
+            if((error_try2<error_try1 && error_try2>1.5) || !isfinite(error_try1))
+            {
+                T = T_try2;
+                error = error_try2;
+                //cout<<"Align "<<host_KF_id<<" to "<<cur_KF_id<<" identity is better with error "<< error<<std::endl;
+            }
+            else{
+                T = T_try1;
+                error = error_try1;
+                //cout<<"Align "<<host_KF_id<<" to "<<cur_KF_id<<" with error "<< error<<std::endl;
+            }
+            if(error<30 && error>1.5 && isfinite(error)){
+                Pose_Graph.add_Edge(cur_KF_id, host_KF_id, T.cast<double>(), 25/(error*error));
+            }
+        }
+    }
+    Pose_Graph.optimize_graph(100);
 }
 
 
