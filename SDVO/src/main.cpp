@@ -25,6 +25,8 @@ int main(int argc, char** argv){
     // data path
     string data_path = "/home/justin/class/ROB530/SLAM_project/data/rgbd_dataset_freiburg1_room";
     string assoc_file = "/home/justin/class/ROB530/SLAM_project/data/associations/fr1_room.txt";
+    string bag_file = "/home/justin/class/ROB530/SLAM_project/data/rgbd_dataset_freiburg2_desk.bag";
+    string strCommand = "rosbag play ";
 
     ros::init(argc, argv, "dvo");
     ros::NodeHandle nh;
@@ -37,7 +39,7 @@ int main(int argc, char** argv){
     message_filters::Subscriber<sensor_msgs::CameraInfo> sub_camera(nh, argv[3], 1);
     message_filters::Synchronizer<SP> sync(SP(10), sub_img_RGB, sub_img_depth, sub_camera);
     sync.registerCallback(boost::bind(&DVO::callback, &dvo, _1, _2, _3));
-
+    
     ros::spin();
 
     return EXIT_SUCCESS;

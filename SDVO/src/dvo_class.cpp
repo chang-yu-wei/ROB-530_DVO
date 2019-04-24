@@ -109,7 +109,7 @@ void DVO::LoadImages(const string &strAssociationFilename)
 
 void DVO::LogInfo(int frame_idx, Eigen::Matrix4f T)
 {
-    std::cout<<frame_idx<<" "<<vstrImageFilenamesRGB[frame_idx]<<" "<<std::endl;
+    // std::cout<<frame_idx<<" "<<vstrImageFilenamesRGB[frame_idx]<<" "<<std::endl;
     Eigen::Quaternionf qT(T.block<3,3>(0,0));
     logfile<<frame_idx<<" "<<vstrImageFilenamesRGB[frame_idx]<<" ";
     logfile<<qT.w()<<" "<<qT.x()<<" "<<qT.y()<<" "<<qT.z()<<" ";
