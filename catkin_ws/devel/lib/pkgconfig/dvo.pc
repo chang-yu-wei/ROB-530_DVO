@@ -1,0 +1,8 @@
+prefix=/home/justin/class/ROB530/ROB-530_DVO/catkin_ws/devel
+
+Name: dvo
+Description: Description of dvo
+Version: 0.0.0
+Cflags: 
+Libs: -L/home/justin/class/ROB530/ROB-530_DVO/catkin_ws/devel/lib 
+Requires: 
