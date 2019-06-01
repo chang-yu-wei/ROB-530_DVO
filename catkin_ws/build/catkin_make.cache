@@ -1,2 +1,0 @@
-SDVO:simple_dvo
--DCATKIN_DEVEL_PREFIX=/home/justin/class/ROB530/ROB-530_DVO/catkin_ws/devel -DCMAKE_INSTALL_PREFIX=/home/justin/class/ROB530/ROB-530_DVO/catkin_ws/install -G Unix Makefiles
